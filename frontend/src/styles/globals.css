@@ -1,0 +1,287 @@
+/*
+ * Hybrid NIDS - Operations Console
+ *
+ * Aesthetic: a SOC analyst's workstation. Dense information, sharp
+ * monospace typography, dark plate background with phosphor-green and
+ * alert-red accents. Inspired by trading terminals and Bloomberg
+ * dashboards more than typical "AI dashboard" aesthetics.
+ *
+ * Colors are committed via CSS variables so the theme can be swapped
+ * for a high-contrast or light variant later if needed.
+ */
+
+:root {
+  /* Plate / surfaces */
+  --bg-base: #0a0d10;
+  --bg-elev-1: #11161b;
+  --bg-elev-2: #181f26;
+  --bg-elev-3: #1f2831;
+
+  /* Borders & dividers */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Text */
+  --text-primary: #e8eef4;
+  --text-secondary: #8a96a3;
+  --text-tertiary: #5b6672;
+  --text-muted: #3e4651;
+
+  /* Status colors - intentionally vivid against the dark plate */
+  --status-benign: #4ade80;       /* phosphor green */
+  --status-suspicious: #fbbf24;   /* amber */
+  --status-malicious: #ef4444;    /* alert red */
+  --status-anomaly: #a78bfa;      /* signal violet for zero-day */
+  --status-info: #38bdf8;         /* electric blue */
+
+  /* Accents */
+  --accent-primary: #4ade80;
+  --accent-secondary: #38bdf8;
+
+  /* Shadow / glow */
+  --glow-green: rgba(74, 222, 128, 0.15);
+  --glow-red: rgba(239, 68, 68, 0.18);
+  --glow-violet: rgba(167, 139, 250, 0.15);
+
+  /* Typography */
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas,
+    "Source Code Pro", monospace;
+  --font-display: "Instrument Serif", "Times New Roman", serif;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-feature-settings: "ss01", "ss02", "cv01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Subtle CRT-style scan-line background. Not animated - just present
+   enough to give the plate texture. Uses a fixed background so it doesn't
+   scroll with content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.012) 50%,
+    transparent 50%
+  );
+  background-size: 100% 3px;
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+
+/* Buttons */
+button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-default);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.16s var(--ease-out-expo);
+  user-select: none;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-elev-3);
+  border-color: var(--border-strong);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  border-color: var(--accent-primary);
+  font-weight: 600;
+  box-shadow: 0 0 16px var(--glow-green);
+}
+
+button.primary:hover:not(:disabled) {
+  background: #5ce895;
+  border-color: #5ce895;
+}
+
+button.danger {
+  background: transparent;
+  color: var(--status-malicious);
+  border-color: var(--status-malicious);
+}
+
+button.danger:hover:not(:disabled) {
+  background: var(--status-malicious);
+  color: var(--bg-base);
+}
+
+/* Form elements */
+input,
+select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg-elev-1);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  padding: 8px 12px;
+  width: 100%;
+  transition: border-color 0.15s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1L5 5L9 1' stroke='%238a96a3' stroke-width='1.5' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* Custom scrollbars - minimal, monochrome, only visible on hover */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elev-3);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Utility classes used across components */
+.mono {
+  font-family: var(--font-mono);
+}
+.serif {
+  font-family: var(--font-display);
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Status pills */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.02);
+}
+.pill.benign {
+  color: var(--status-benign);
+}
+.pill.malicious {
+  color: var(--status-malicious);
+  background: var(--glow-red);
+}
+.pill.anomaly {
+  color: var(--status-anomaly);
+  background: var(--glow-violet);
+}
+.pill.suspicious {
+  color: var(--status-suspicious);
+}
+
+/* Pulsing live-status dot */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--status-benign);
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  box-shadow: 0 0 8px var(--status-benign);
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--status-benign);
+  opacity: 0.6;
+  animation: live-pulse 1.6s ease-out infinite;
+}
+.live-dot.idle {
+  background: var(--text-muted);
+  box-shadow: none;
+}
+.live-dot.idle::after {
+  display: none;
+}
+
+@keyframes live-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* Focus ring for keyboard nav (accessibility) */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}

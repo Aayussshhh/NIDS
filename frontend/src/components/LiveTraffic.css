@@ -1,0 +1,254 @@
+.live-traffic {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-default);
+  height: 100%;
+  overflow: hidden;
+}
+
+.live-traffic__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-elev-2);
+}
+
+.live-traffic__title-block {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.live-traffic__title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.live-traffic__title .serif {
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--accent-primary);
+  font-style: italic;
+}
+
+.live-traffic__title .mono {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.live-traffic__subtitle {
+  font-size: 9px;
+}
+
+.live-traffic__filters {
+  display: flex;
+  gap: 4px;
+}
+
+.live-traffic__filter-btn {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  padding: 5px 10px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-default);
+}
+
+.live-traffic__filter-btn.active {
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px var(--glow-green);
+}
+
+/* ----- Table ----- */
+.live-traffic__table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.live-traffic__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+.live-traffic__table thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-elev-2);
+  z-index: 2;
+}
+
+.live-traffic__table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--text-tertiary);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-default);
+  text-transform: uppercase;
+}
+
+.live-traffic__row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  transition: background 0.12s ease;
+}
+
+.live-traffic__row td {
+  padding: 7px 10px;
+  vertical-align: middle;
+  color: var(--text-secondary);
+}
+
+.live-traffic__row:hover {
+  background: var(--bg-elev-2);
+}
+
+.live-traffic__row:hover td {
+  color: var(--text-primary);
+}
+
+.live-traffic__row.selected {
+  background: rgba(74, 222, 128, 0.06);
+  box-shadow: inset 2px 0 0 var(--accent-primary);
+}
+
+/* Severity left-stripe */
+.live-traffic__row--malicious {
+  box-shadow: inset 2px 0 0 var(--status-malicious);
+}
+.live-traffic__row--anomaly {
+  box-shadow: inset 2px 0 0 var(--status-anomaly);
+}
+.live-traffic__row--suspicious {
+  box-shadow: inset 2px 0 0 var(--status-suspicious);
+}
+
+.live-traffic__empty {
+  text-align: center;
+  padding: 60px 20px !important;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* ----- Column widths ----- */
+.col-time {
+  width: 90px;
+  color: var(--text-tertiary) !important;
+  font-size: 10px;
+}
+.col-verdict {
+  width: 140px;
+}
+.col-conf {
+  width: 80px;
+}
+.col-src,
+.col-dst {
+  width: 180px;
+}
+.col-arrow {
+  width: 24px;
+  text-align: center;
+  color: var(--text-muted) !important;
+  font-size: 14px;
+}
+.col-proto {
+  width: 50px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.col-bytes {
+  width: 70px;
+  text-align: right;
+  color: var(--text-secondary) !important;
+}
+.col-anom {
+  width: 60px;
+  text-align: center;
+}
+.col-chevron {
+  width: 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* ----- Inline cell styles ----- */
+.live-traffic__ms {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.addr {
+  color: var(--text-primary);
+}
+
+.port {
+  color: var(--text-tertiary);
+}
+
+/* Confidence bar */
+.conf-bar {
+  position: relative;
+  height: 14px;
+  background: var(--bg-elev-3);
+  width: 100%;
+}
+
+.conf-bar__fill {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.conf-bar__fill--benign {
+  background: var(--status-benign);
+  opacity: 0.4;
+}
+.conf-bar__fill--malicious {
+  background: var(--status-malicious);
+  opacity: 0.5;
+}
+.conf-bar__fill--anomaly {
+  background: var(--status-anomaly);
+  opacity: 0.5;
+}
+.conf-bar__fill--suspicious {
+  background: var(--status-suspicious);
+  opacity: 0.4;
+}
+
+.conf-bar__text {
+  position: relative;
+  z-index: 1;
+  font-size: 9px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-weight: 600;
+}
+
+/* AE indicator */
+.anom-indicator {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.anom-indicator--above {
+  color: var(--status-anomaly);
+  font-weight: 700;
+}

@@ -1,0 +1,132 @@
+.analytics-strip {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 12px;
+  height: 100%;
+}
+
+.analytics-strip__panel {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.analytics-strip__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elev-2);
+}
+
+.analytics-strip__title .serif {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.analytics-strip__title .label {
+  font-size: 9px;
+}
+
+.analytics-strip__chart {
+  flex: 1;
+  padding: 8px 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.analytics-strip__panel--wide .analytics-strip__chart {
+  grid-template-columns: 1fr;
+}
+
+.analytics-strip__empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: 11px;
+  width: 100%;
+  padding: 40px 0;
+}
+
+/* ----- Legend (next to donut) ----- */
+.analytics-strip__legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-size: 10px;
+}
+
+.legend-item {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.legend-item__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+}
+
+.legend-item__name {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend-item__count {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----- Custom Tooltip ----- */
+.custom-tooltip {
+  background: var(--bg-elev-3);
+  border: 1px solid var(--border-strong);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.custom-tooltip__label {
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.custom-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.custom-tooltip__swatch {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-tooltip__name {
+  color: var(--text-secondary);
+  margin-right: 12px;
+}
+
+.custom-tooltip__value {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}

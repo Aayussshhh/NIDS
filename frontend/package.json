@@ -1,0 +1,28 @@
+{
+  "name": "nids-hybrid-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "React dashboard for the Hybrid Network Intrusion Detection System",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .jsx,.js"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7",
+    "lucide-react": "^0.441.0",
+    "framer-motion": "^11.5.4",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.2",
+    "eslint": "^9.9.0",
+    "@types/react": "^18.3.4",
+    "@types/react-dom": "^18.3.0"
+  }
+}

@@ -1,0 +1,266 @@
+.threat-details {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-default);
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ----- Empty state ----- */
+.threat-details--empty {
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.threat-details__empty-mark {
+  font-size: 60px;
+  color: var(--text-muted);
+  line-height: 1;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.threat-details__empty-title {
+  font-size: 26px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.threat-details__empty-text {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+/* ----- Verdict header ----- */
+.threat-details__verdict {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border-default);
+  position: relative;
+  overflow: hidden;
+}
+
+.threat-details__verdict::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at top right,
+    currentColor 0%,
+    transparent 60%
+  );
+}
+
+.threat-details__verdict--benign {
+  color: var(--status-benign);
+}
+.threat-details__verdict--suspicious {
+  color: var(--status-suspicious);
+}
+.threat-details__verdict--malicious {
+  color: var(--status-malicious);
+}
+.threat-details__verdict--anomaly {
+  color: var(--status-anomaly);
+}
+
+.threat-details__verdict-label {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.threat-details__verdict-text {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: currentColor;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.threat-details__verdict-conf {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  position: relative;
+}
+
+.threat-details__verdict-conf-num {
+  color: currentColor;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-left: 6px;
+}
+
+.threat-details__zero-day-flag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 10px;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid var(--status-anomaly);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--status-anomaly);
+  font-weight: 600;
+  position: relative;
+}
+
+/* ----- Section ----- */
+.threat-details__section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.threat-details__section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.threat-details__section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ----- Key/value rows ----- */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  padding: 4px 0;
+}
+
+.kv__label {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.kv__value {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----- Signal rows (per-model breakdown) ----- */
+.signal-row {
+  padding: 8px 0;
+}
+
+.signal-row__name {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.signal-row__value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+
+.signal-row__tag {
+  font-size: 9px;
+  padding: 2px 6px;
+  background: var(--bg-elev-3);
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.signal-row__tag--alert {
+  background: var(--glow-violet);
+  color: var(--status-anomaly);
+  border: 1px solid var(--status-anomaly);
+}
+
+.signal-row__bar {
+  position: relative;
+  height: 4px;
+  background: var(--bg-elev-3);
+  overflow: hidden;
+}
+
+.signal-row__bar-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent-primary);
+  transition: width 0.3s var(--ease-out-expo);
+}
+
+.signal-row__bar-threshold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--text-muted);
+}
+
+/* ----- Chart ----- */
+.threat-details__chart {
+  margin-top: 4px;
+}
+
+/* ----- Feature row (SHAP) ----- */
+.feature-row {
+  display: grid;
+  grid-template-columns: 1fr 50px;
+  gap: 4px 8px;
+  align-items: center;
+  font-size: 10px;
+}
+
+.feature-row__name {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.feature-row__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.feature-row__bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: var(--bg-elev-3);
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.feature-row__bar-fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+}

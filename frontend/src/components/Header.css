@@ -1,0 +1,229 @@
+.header {
+  display: grid;
+  grid-template-columns: 280px 1fr auto;
+  gap: var(--space-5);
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--bg-elev-1);
+  border-bottom: 1px solid var(--border-default);
+  position: relative;
+  z-index: 10;
+}
+
+.header::after {
+  /* Hairline accent under the header - phosphor green when running */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-primary) 50%,
+    transparent 100%
+  );
+  opacity: 0.4;
+}
+
+/* ----- Identity ----- */
+.header__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header__brand-mark {
+  font-size: 18px;
+  color: var(--accent-primary);
+  letter-spacing: -2px;
+  filter: drop-shadow(0 0 6px var(--glow-green));
+}
+
+.header__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.header__brand-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.header__brand-sub {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.header__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.header__meta-text {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.header__meta-divider {
+  color: var(--text-muted);
+}
+
+/* ----- Counters ----- */
+.header__counters {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border-default);
+  border: 1px solid var(--border-default);
+}
+
+.counter {
+  background: var(--bg-elev-2);
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.2s ease;
+}
+
+.counter--alert {
+  animation: alert-flash 1.4s ease-in-out infinite;
+}
+
+@keyframes alert-flash {
+  0%,
+  100% {
+    background: var(--bg-elev-2);
+  }
+  50% {
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
+.counter__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.counter__icon--info {
+  color: var(--status-info);
+}
+.counter__icon--benign {
+  color: var(--status-benign);
+}
+.counter__icon--malicious {
+  color: var(--status-malicious);
+}
+.counter__icon--anomaly {
+  color: var(--status-anomaly);
+}
+
+.counter__label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.counter__value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.counter__value--info {
+  color: var(--text-primary);
+}
+.counter__value--benign {
+  color: var(--status-benign);
+}
+.counter__value--malicious {
+  color: var(--status-malicious);
+}
+.counter__value--anomaly {
+  color: var(--status-anomaly);
+}
+
+/* ----- Control ----- */
+.header__control {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.header__select {
+  width: 280px;
+  font-size: 11px;
+}
+
+.header__filter {
+  width: 120px;
+  font-size: 11px;
+}
+
+.header__control button {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Capture toggle */
+.header__capture-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid;
+}
+
+.header__capture-toggle.on {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+.header__capture-toggle.on:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.header__capture-toggle.off {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+.header__capture-toggle.off:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.header__capture-toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
