@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from collections import deque
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
@@ -50,7 +51,7 @@ from backend.config import (
 )
 from backend.inference.attack_injector import ATTACK_REGISTRY, generate_attack
 from backend.inference.feature_extractor import FlowTracker
-from backend.inference.packet_capture import PacketCapture
+from backend.inference.packet_capture import PacketCapture, SyntheticCapture
 from backend.inference.predictor import HybridPredictor
 from backend.utils.logger import get_logger
 
@@ -62,16 +63,17 @@ log = get_logger(__name__, "api.log")
 class PipelineState:
     def __init__(self):
         self.predictor: HybridPredictor | None = None
-        self.capture: PacketCapture | None = None
+        self.capture: SyntheticCapture | None = None
         self.tracker: FlowTracker | None = None
         self.flow_queue: asyncio.Queue | None = None
         self.result_queue: asyncio.Queue | None = None
         self.tasks: list[asyncio.Task] = []
-        self.recent: deque[dict] = deque(maxlen=200)
+        self.recent: deque[dict] = deque(maxlen=2000)
         self.is_running = False
         self.capture_enabled = True  # Can be toggled independently
         self.current_interface: str | None = None
         self.current_bpf: str | None = None
+        self.total_processed: int = 0
 
 
 state = PipelineState()
@@ -173,6 +175,7 @@ async def start_pipeline(
             while True:
                 result = await state.result_queue.get()
                 state.recent.append(result)
+                state.total_processed += 1
         except asyncio.CancelledError:
             return
         except Exception as e:
@@ -194,7 +197,7 @@ async def start_pipeline(
 
 def _start_capture(interface, bpf, tasks):
     """Start packet capture and wire it to the tracker."""
-    state.capture = PacketCapture(
+    state.capture = SyntheticCapture(
         interface=interface or DEFAULT_INTERFACE, bpf_filter=bpf
     )
     state.capture.start()
@@ -358,6 +361,11 @@ async def inject(req: InjectRequest):
 
     Works regardless of whether real-time capture is on or off. Packets
     are fed directly into the FlowTracker as ParsedPacket objects.
+
+    To prevent attack results from being buried under the continuous
+    benign traffic stream, we temporarily pause the synthetic capture
+    during injection and give the predictor time to process the attack
+    flows before resuming.
     """
     if not state.is_running:
         raise HTTPException(400, "Pipeline not running. Start it first.")
@@ -369,14 +377,44 @@ async def inject(req: InjectRequest):
     except ValueError as e:
         raise HTTPException(400, str(e))
 
+    # Temporarily pause synthetic capture so attack flows aren't drowned.
+    capture_was_running = False
+    if state.capture is not None and getattr(state.capture, 'is_running', False):
+        capture_was_running = True
+        if hasattr(state.capture, 'is_paused'):
+            state.capture.is_paused = True
+        # Drain the capture queue so stale benign packets don't mix in.
+        while not state.capture.queue.empty():
+            try:
+                state.capture.queue.get_nowait()
+            except Exception:
+                break
+
+    # Force a sweep BEFORE injecting, so pending benign flows are emitted first
+    # and appear older (lower in the UI) than the new attack flows.
+    expired_keys = list(state.tracker._flows.keys())
+    for key in expired_keys:
+        state.tracker._emit(key)
+
     # Feed packets into the tracker.
     for pkt in packets:
         state.tracker.add_packet(pkt)
 
-    # Force a sweep to emit completed flows immediately.
+    # Force another sweep to emit the attack flows immediately (for those without FIN).
     expired_keys = list(state.tracker._flows.keys())
     for key in expired_keys:
         state.tracker._emit(key)
+
+    # Give the predictor consume_loop time to process the attack flows.
+    # Without this, the endpoint returns before results reach the recent
+    # buffer, and the WebSocket may not broadcast them before benign
+    # traffic resumes and buries them.
+    await asyncio.sleep(0.5)
+
+    # Resume synthetic capture.
+    if capture_was_running:
+        if hasattr(state.capture, 'is_paused'):
+            state.capture.is_paused = False
 
     attack_info = ATTACK_REGISTRY.get(req.attack_type, {})
     log.info(f"Injected {len(packets)} packets for {req.attack_type} "
@@ -417,18 +455,19 @@ async def ws_live(ws: WebSocket):
     except Exception:
         return
 
-    last_seen = len(state.recent)
+    last_seen_id = state.total_processed
     interval = 1.0 / max(WEBSOCKET_BROADCAST_HZ, 1)
     try:
         while True:
             await asyncio.sleep(interval)
-            current_len = len(state.recent)
-            if current_len > last_seen:
+            current_id = state.total_processed
+            if current_id > last_seen_id:
+                diff = current_id - last_seen_id
                 items = list(state.recent)
-                new_items = items[max(0, last_seen - (len(items) - current_len)):]
+                new_items = items[-diff:] if diff <= len(items) else items
                 if new_items:
                     await ws.send_json({"type": "update", "results": new_items})
-                last_seen = current_len
+                last_seen_id = current_id
     except WebSocketDisconnect:
         log.info("WS /ws/live disconnected")
     except Exception as e:
@@ -461,10 +500,12 @@ async def ws_stats(ws: WebSocket):
 # ---------------------------------------------------------------------------
 def serve() -> None:
     import uvicorn
+    port = int(os.environ.get("PORT", API_PORT))
+    log.info(f"Starting server on {API_HOST}:{port}")
     uvicorn.run(
         "backend.api.main:app",
         host=API_HOST,
-        port=API_PORT,
+        port=port,
         reload=False,
         log_level="info",
     )

@@ -191,3 +191,88 @@ class PacketCapture:
             elapsed = time.time() - stats["started_at"]
             stats["pps"] = stats["captured"] / elapsed if elapsed > 0 else 0.0
         return stats
+
+
+class SyntheticCapture:
+    """A drop-in replacement for PacketCapture that generates benign traffic
+    instead of sniffing a real network interface.
+    """
+
+    def __init__(self, interface: str | None = None, bpf_filter: str | None = "ip", queue_max: int = 10_000):
+        self.interface = interface
+        self.bpf_filter = bpf_filter
+        self.queue: asyncio.Queue[ParsedPacket] = asyncio.Queue(maxsize=queue_max)
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._task: asyncio.Task | None = None
+        self._lock = threading.Lock()
+        self._stats = {"captured": 0, "dropped": 0, "started_at": 0.0}
+        self.is_running = False
+        self.is_paused = False
+
+    async def _generator_loop(self):
+        import random
+        while self.is_running:
+            if self.is_paused:
+                await asyncio.sleep(0.1)
+                continue
+            try:
+                # Generate 1 to 5 packets every 0.1s (~30 pps)
+                count = random.randint(1, 5)
+                for _ in range(count):
+                    # Simulate HTTP traffic
+                    pkt = ParsedPacket(
+                        timestamp=time.time(),
+                        src_ip=f"192.168.1.{random.randint(10, 250)}",
+                        dst_ip=f"10.0.0.{random.randint(1, 100)}",
+                        src_port=random.randint(1024, 65535),
+                        dst_port=random.choice([80, 443, 8080]),
+                        protocol=6, # TCP
+                        length=random.randint(64, 1500),
+                        tcp_flags=24, # PSH | ACK
+                        ttl=64,
+                        icmp_type=0,
+                        win_size=65535,
+                        synthetic_class="Benign"
+                    )
+                    
+                    with self._lock:
+                        self._stats["captured"] += 1
+                        
+                    try:
+                        self.queue.put_nowait(pkt)
+                    except asyncio.QueueFull:
+                        with self._lock:
+                            self._stats["dropped"] += 1
+                            
+                await asyncio.sleep(0.1)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                log.exception(f"SyntheticCapture error: {e}")
+                await asyncio.sleep(1)
+
+    def start(self) -> None:
+        if self.is_running:
+            return
+        self._loop = asyncio.get_event_loop()
+        self.is_running = True
+        self._stats["started_at"] = time.time()
+        self._task = self._loop.create_task(self._generator_loop(), name="synthetic_capture")
+        log.info(f"SyntheticCapture started")
+
+    def stop(self) -> None:
+        if not self.is_running:
+            return
+        self.is_running = False
+        if self._task:
+            self._task.cancel()
+            self._task = None
+        log.info(f"SyntheticCapture stopped. Stats: {self.get_stats()}")
+
+    def get_stats(self) -> dict:
+        with self._lock:
+            stats = dict(self._stats)
+        if stats["started_at"]:
+            elapsed = time.time() - stats["started_at"]
+            stats["pps"] = stats["captured"] / elapsed if elapsed > 0 else 0.0
+        return stats

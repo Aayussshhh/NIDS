@@ -4,11 +4,25 @@
  * Centralizes all HTTP and WebSocket calls so components don't reach
  * for fetch() directly. If we ever need to add auth headers or change
  * the base URL, there's one place to do it.
+ *
+ * In production, VITE_API_URL points to the Render backend URL.
+ * In development, it's empty and the Vite proxy handles routing.
  */
 
-const API_BASE = ""; // Empty -> uses Vite proxy in dev, same-origin in prod
-const WS_PROTO = window.location.protocol === "https:" ? "wss:" : "ws:";
-const WS_BASE = `${WS_PROTO}//${window.location.host}`;
+// VITE_API_URL should be the full backend URL in production,
+// e.g. "https://nids-hybrid-backend.onrender.com"
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
+// WebSocket base: derive from API_BASE in production, or use current host in dev.
+function getWsBase() {
+  if (API_BASE) {
+    // Convert https://foo.com -> wss://foo.com, http://foo.com -> ws://foo.com
+    return API_BASE.replace(/^https:/, "wss:").replace(/^http:/, "ws:");
+  }
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}`;
+}
+const WS_BASE = getWsBase();
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {

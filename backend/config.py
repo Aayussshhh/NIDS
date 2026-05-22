@@ -7,6 +7,7 @@ to tune model behavior. Nothing else in the codebase should hardcode
 paths or magic numbers.
 """
 
+import os
 from pathlib import Path
 import torch
 
@@ -39,7 +40,11 @@ for d in (MODELS_DIR, SCALERS_DIR, ENCODERS_DIR, LOGS_DIR):
 # ---------------------------------------------------------------------------
 # Auto-detect CUDA. On Windows with an RTX 3070 and the correct PyTorch
 # wheel installed (cu118 or cu121), this should resolve to "cuda".
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+# In deployed environments (Render, Railway), force CPU via FORCE_CPU=1.
+if os.environ.get("FORCE_CPU", "").strip() in ("1", "true", "yes"):
+    DEVICE = "cpu"
+else:
+    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Mixed-precision training reduces VRAM use and speeds up training on
 # Ampere GPUs (RTX 3070 is Ampere). Disable if you hit numerical issues.
@@ -190,14 +195,21 @@ DEFAULT_INTERFACE: str | None = None
 # API
 # ---------------------------------------------------------------------------
 API_HOST = "0.0.0.0"
-API_PORT = 8000
+API_PORT = int(os.environ.get("PORT", 8000))
 
 # CORS - allow the React dev server to talk to FastAPI in development.
+# In production, add the Vercel URL via the ALLOWED_ORIGINS env var.
+_extra_origins = [
+    o.strip()
+    for o in os.environ.get("ALLOWED_ORIGINS", "").split(",")
+    if o.strip()
+]
 ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite default
     "http://localhost:3000",  # CRA default
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    *_extra_origins,
 ]
 
 # WebSocket - how many recent classifications to broadcast per second.

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: nids-hybrid-backend
+    runtime: python
+    plan: free
+    buildCommand: |
+      pip install --upgrade pip
+      pip install torch --index-url https://download.pytorch.org/whl/cpu
+      pip install -r requirements.txt
+    startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: FORCE_CPU
+        value: "1"
+      - key: ALLOWED_ORIGINS
+        sync: false  # Set this in the Render dashboard after deploying frontend
+      - key: PYTHON_VERSION
+        value: "3.11.9"

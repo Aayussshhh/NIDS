@@ -138,56 +138,59 @@ def _recon_port_scan(intensity: str = "medium") -> list[ParsedPacket]:
 
 
 def _bruteforce_ssh(intensity: str = "medium") -> list[ParsedPacket]:
-    """Repeated SSH connection attempts. We group these into a single long-lived flow
-    because in CICIDS2017 Patator attacks often reuse connections or look like bulk transfers."""
-    attempts = int(60 * INTENSITY_MULTIPLIER.get(intensity, 1.0))
+    """Rapid SSH login attempts — each attempt uses a NEW source port so that
+    every attempt creates a separate flow. This mimics Hydra/Medusa which
+    open fresh TCP connections per credential pair, and ensures the UI
+    shows many distinct BruteForce classifications instead of one."""
+    attempts = int(30 * INTENSITY_MULTIPLIER.get(intensity, 1.0))
     t = time.time()
     src = f"192.168.1.{random.randint(100, 200)}"
     dst = "10.0.0.1"
-    sp = random.randint(1024, 65535)
     pkts = []
-    # Setup connection
-    pkts.extend([
-        ParsedPacket(t, src, dst, sp, 22, 6, 54, SYN, 64, 0, 65535),
-        ParsedPacket(t+0.01, dst, src, 22, sp, 6, 54, SYN_ACK, 64, 0, 65535),
-    ])
-    # Many attempts in one flow
     for i in range(attempts):
-        at = t + 0.05 + i * 0.1
+        sp = random.randint(1024, 65535)
+        at = t + i * 0.15
+        # SYN -> SYN-ACK -> credential attempt -> rejection -> RST
         pkts.extend([
-            ParsedPacket(at, src, dst, sp, 22, 6, random.randint(80, 150), PSH | ACK, 64, 0, 65535),
-            ParsedPacket(at + 0.02, dst, src, 22, sp, 6, random.randint(150, 400), PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at,        src, dst, sp, 22, 6, 54,  SYN,     64, 0, 65535),
+            ParsedPacket(at + 0.01, dst, src, 22, sp, 6, 54,  SYN_ACK, 64, 0, 65535),
+            ParsedPacket(at + 0.02, src, dst, sp, 22, 6, random.randint(80, 150), PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at + 0.04, dst, src, 22, sp, 6, random.randint(150, 400), PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at + 0.05, src, dst, sp, 22, 6, random.randint(80, 120), PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at + 0.07, dst, src, 22, sp, 6, random.randint(60, 100),  PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at + 0.08, dst, src, 22, sp, 6, 54,  FIN | ACK, 64, 0, 65535),
         ])
-    # Teardown
-    pkts.append(ParsedPacket(t + attempts * 0.1 + 0.1, src, dst, sp, 22, 6, 54, FIN | ACK, 64, 0, 65535))
-    log.info(f"Generated {len(pkts)} SSH brute-force packets")
+    log.info(f"Generated {len(pkts)} SSH brute-force packets ({attempts} sessions)")
     return pkts
 
 
 def _injection_sqli(intensity: str = "medium") -> list[ParsedPacket]:
-    """HTTP session with extremely large upstream payloads simulating SQL/XSS."""
+    """HTTP requests carrying SQL injection / XSS payloads.  Each request
+    uses a NEW source port (new TCP connection) — just like sqlmap in
+    default mode.  This produces many distinct flows so the UI shows a
+    clear burst of Injection classifications."""
+    requests = int(20 * INTENSITY_MULTIPLIER.get(intensity, 1.0))
     t = time.time()
     src = f"192.168.1.{random.randint(100, 200)}"
     dst = "10.0.0.1"
-    pkts = []
-    sp = random.randint(1024, 65535)
     dp = random.choice([80, 443])
-    # Connection setup
-    pkts.extend([
-        ParsedPacket(t, src, dst, sp, dp, 6, 54, SYN, 64, 0, 65535),
-        ParsedPacket(t+0.01, dst, src, dp, sp, 6, 54, SYN_ACK, 64, 0, 65535),
-    ])
-    # Send a few massive requests (SQLi/XSS payload) over a few seconds
-    for i in range(5):
-        at = t + 0.1 + i * 1.5
+    pkts = []
+    for i in range(requests):
+        sp = random.randint(1024, 65535)
+        at = t + i * 0.2
+        # SYN -> SYN-ACK -> large POST (SQLi payload) -> response -> FIN
         pkts.extend([
-            ParsedPacket(at, src, dst, sp, dp, 6, random.randint(1200, 1500), PSH | ACK, 64, 0, 65535),
-            ParsedPacket(at + 0.01, src, dst, sp, dp, 6, random.randint(1200, 1500), PSH | ACK, 64, 0, 65535),
-            ParsedPacket(at + 0.1, dst, src, dp, sp, 6, random.randint(200, 400), PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at,        src, dst, sp, dp, 6, 54,  SYN,     64, 0, 65535),
+            ParsedPacket(at + 0.01, dst, src, dp, sp, 6, 54,  SYN_ACK, 64, 0, 65535),
+            # Large upstream payload (SQL injection / XSS)
+            ParsedPacket(at + 0.02, src, dst, sp, dp, 6, random.randint(1200, 1500), PSH | ACK, 64, 0, 65535),
+            ParsedPacket(at + 0.03, src, dst, sp, dp, 6, random.randint(800, 1200),  PSH | ACK, 64, 0, 65535),
+            # Server response (error page / stack trace)
+            ParsedPacket(at + 0.10, dst, src, dp, sp, 6, random.randint(200, 500),   PSH | ACK, 64, 0, 65535),
+            # Teardown
+            ParsedPacket(at + 0.12, src, dst, sp, dp, 6, 54,  FIN | ACK, 64, 0, 65535),
         ])
-    # Teardown
-    pkts.append(ParsedPacket(t + 8.0, src, dst, sp, dp, 6, 54, FIN | ACK, 64, 0, 65535))
-    log.info(f"Generated {len(pkts)} injection packets")
+    log.info(f"Generated {len(pkts)} injection packets ({requests} sessions)")
     return pkts
 
 

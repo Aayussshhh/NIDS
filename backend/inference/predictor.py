@@ -178,9 +178,10 @@ class HybridPredictor:
         if flow.synthetic_class:
             verdict_label = flow.synthetic_class
             meta_pred = LABEL_TO_IDX.get(verdict_label, LABEL_TO_IDX["Other"])
-            meta_conf = 0.99
-            zero_day_override = False
             is_anomaly = verdict_label != "Benign"
+            # Randomize confidence: 80-100% for benign, 85-100% for malicious
+            meta_conf = float(np.random.uniform(0.85, 1.00) if is_anomaly else np.random.uniform(0.80, 1.00))
+            zero_day_override = False
             
             # Override probabilities so UI displays correctly
             meta_probs = np.zeros(NUM_CLASSES)
